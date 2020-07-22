@@ -87,7 +87,12 @@ class OBJECT_OT_uvs_by_angle(bpy.types.Operator):
         
         main_obj.data.uv_layers['UVMap.001'].active_render = True
 
-        ShowMessageBox("", "Uv's aplicadas com sucesso", "INFO") 
+        ShowMessageBox("Novas UV's na UV01", "Sucesso!", "INFO") 
+        
+        bpy.ops.mesh.select_all(action='DESELECT')
+        
+        if bpy.ops.object.mode_set.poll():
+            bpy.ops.object.mode_set(mode='OBJECT')
         
         return {'FINISHED'}
 
