@@ -59,7 +59,7 @@ class OBJECT_OT_uvs_by_angle(bpy.types.Operator):
 
     def execute(self, context):
         
-        main_obj = bpy.context.scene.objects["1"]
+        main_obj = bpy.context.scene.objects[1]
         bpy.context.view_layer.objects.active = main_obj
         bpy.context.active_object.select_set(state=True)
         
