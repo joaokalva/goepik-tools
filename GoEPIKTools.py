@@ -96,6 +96,35 @@ class OBJECT_OT_uvs_by_angle(bpy.types.Operator):
         
         return {'FINISHED'}
 
+class OBJECT_OT_pallette_uvs(bpy.types.Operator):
+    """Remove vertices duplas, aplica escala e rotação, limpa Custom Split Data, aplica Auto Smooth e recalcula normais"""
+    bl_idname = "mesh.pallette_uvs"
+    bl_label = "UV's para Pallette"
+
+    def execute(self, context):
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                if context.active_object.mode == 'OBJECT':
+                    ShowMessageBox("Faça uma seleção no modo de ediçao", "Aviso", "ERROR")
+                    return {'FINISHED'}
+                area.spaces[0].region_3d.view_perspective = 'ORTHO'
+                bpy.ops.view3d.view_axis(type='FRONT', align_active=False, relative=False)
+                bpy.ops.view3d.localview(frame_selected=True)
+                old_type = area.type
+                
+                bpy.context.area.type = 'IMAGE_EDITOR'
+                old_ui_type = bpy.context.area.ui_type
+                bpy.context.area.ui_type = 'UV'
+                
+                bpy.context.scene.tool_settings.use_uv_select_sync = True
+                bpy.ops.transform.resize(value=(0, .3, .3), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(True, False, False), mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=0.385543, use_proportional_connected=False, use_proportional_projected=False)
+                
+                bpy.context.area.ui_type = old_ui_type
+                bpy.context.area.type = 'VIEW_3D'
+
+        ShowMessageBox("UV's para Pallette.", "Sucesso!", "INFO") 
+        return {'FINISHED'}
+
 # Panel UI
 
 class MyPanel(bpy.types.Panel):
@@ -113,6 +142,9 @@ class MyPanel(bpy.types.Panel):
 
         row = layout.row(align=True)
         row.operator("mesh.uvs_by_angle")
+        
+        row = layout.row(align=True)
+        row.operator("mesh.pallette_uvs")
 
         my_bool : BoolProperty(
             name="Enable or Disable",
@@ -132,12 +164,14 @@ def register():
     bpy.utils.register_class(MyPanel)
     bpy.utils.register_class(OBJECT_OT_clean_mesh)
     bpy.utils.register_class(OBJECT_OT_uvs_by_angle)   
+    bpy.utils.register_class(OBJECT_OT_pallette_uvs)   
     bpy.types.VIEW3D_MT_mesh_add.append(add_object_button)
     
 def unregister():
     bpy.utils.unregister_class(MyPanel)
     bpy.utils.unregister_class(OBJECT_OT_clean_mesh)
     bpy.utils.unregister_class(OBJECT_OT_uvs_by_angle)
+    bpy.utils.unregister_class(OBJECT_OT_pallette_uvs)
     bpy.types.VIEW3D_MT_mesh_add.remove(add_object_button)
 
 if __name__ == "__main__":
