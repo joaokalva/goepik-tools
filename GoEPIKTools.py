@@ -13,6 +13,7 @@ bl_info = {
 import bpy
 import math 
 
+debugging = False
 def ShowMessageBox(custom_message = "", custom_title = "", custom_icon = ""):
     def draw(self, context):
         self.layout.label(text=custom_message)
@@ -136,6 +137,9 @@ class MyPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         scene = context.scene
+        
+        if debugging:
+            self.layout.label(text="DEBUG", icon="ERROR")
         
         row = layout.row(align=True)
         row.operator("mesh.clean_mesh")
