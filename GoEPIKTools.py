@@ -14,6 +14,7 @@ import bpy
 import math 
 
 debugging = False
+
 def ShowMessageBox(custom_message = "", custom_title = "", custom_icon = ""):
     def draw(self, context):
         self.layout.label(text=custom_message)
@@ -22,7 +23,7 @@ def ShowMessageBox(custom_message = "", custom_title = "", custom_icon = ""):
         
 
 class OBJECT_OT_clean_mesh(bpy.types.Operator):
-    """Remove vértices duplas, aplica escala e rotação, limpa Custom Split Data, aplica Auto Smooth e recalcula normais"""
+    """Remove vértices duplas, aplica escala e rotação, limpa Custom Split Data, aplica Auto Smooth e recalcula normais."""
     bl_idname = "mesh.clean_mesh"
     bl_label = "Limpar Mesh(s)"
     
@@ -54,7 +55,7 @@ class OBJECT_OT_clean_mesh(bpy.types.Operator):
         return {'FINISHED'}
     
 class OBJECT_OT_uvs_by_angle(bpy.types.Operator):
-    """Remove vertices duplas, aplica escala e rotação, limpa Custom Split Data, aplica Auto Smooth e recalcula normais"""
+    """Cria um segundo canal de UV com UVs por angulo."""
     bl_idname = "mesh.uvs_by_angle"
     bl_label = "UV's por ângulo (na UV1)"
 
@@ -63,20 +64,20 @@ class OBJECT_OT_uvs_by_angle(bpy.types.Operator):
         main_obj = bpy.context.scene.objects[1]
         bpy.context.view_layer.objects.active = main_obj
         bpy.context.active_object.select_set(state=True)
-        
-        
+         
         if len(main_obj.data.uv_layers) == 1:
             bpy.ops.mesh.uv_texture_add()
             
         if len(main_obj.data.uv_layers) > 2:
             while len(main_obj.data.uv_layers) > 2:
                 bpy.ops.mesh.uv_texture_remove()
-
+            
+        main_obj.data.uv_layers['UVMap.001'].active = True
+        main_obj.data.uv_layers['UVMap.001'].active_render = True
+        
         if bpy.ops.object.mode_set.poll():
             bpy.ops.object.mode_set(mode='EDIT')
-
-        main_obj.data.uv_layers['UVMap.001'].active_render = True
-
+        
         bpy.ops.mesh.select_all(action='DESELECT')
         bpy.ops.mesh.select_mode(use_extend=False, use_expand=False, type='EDGE')
         bpy.ops.mesh.edges_select_sharp(sharpness=1.0821)
@@ -86,19 +87,15 @@ class OBJECT_OT_uvs_by_angle(bpy.types.Operator):
         bpy.ops.uv.average_islands_scale()
         bpy.ops.uv.pack_islands(margin=0.005)
         
-        main_obj.data.uv_layers['UVMap.001'].active_render = True
 
         ShowMessageBox("Novas UV's na UV01", "Sucesso!", "INFO") 
         
         bpy.ops.mesh.select_all(action='DESELECT')
-        
-        if bpy.ops.object.mode_set.poll():
-            bpy.ops.object.mode_set(mode='OBJECT')
-        
+   
         return {'FINISHED'}
 
 class OBJECT_OT_pallette_uvs(bpy.types.Operator):
-    """Remove vertices duplas, aplica escala e rotação, limpa Custom Split Data, aplica Auto Smooth e recalcula normais"""
+    """Pega o angulo do viewport atual, faz automaticamente o UVW com tamanho constante de 0.3 de altura para gradientes."""
     bl_idname = "mesh.pallette_uvs"
     bl_label = "UV's para Pallette"
 
@@ -149,11 +146,6 @@ class MyPanel(bpy.types.Panel):
         
         row = layout.row(align=True)
         row.operator("mesh.pallette_uvs")
-
-        my_bool : BoolProperty(
-            name="Enable or Disable",
-            description="A simple bool property",
-            default = True) 
 
 # Registration
 
