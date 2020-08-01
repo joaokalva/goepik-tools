@@ -109,13 +109,13 @@ class OBJECT_OT_pallette_uvs(bpy.types.Operator):
                     return {'FINISHED'}
                 #area.spaces[0].region_3d.view_perspective = 'ORTHO'
                 #bpy.ops.view3d.view_axis(type='FRONT', align_active=False, relative=False)
+                bpy.ops.uv.project_from_view(camera_bounds=False, correct_aspect=True, scale_to_bounds=True)
                 old_type = area.type
                 
                 bpy.context.area.type = 'IMAGE_EDITOR'
                 old_ui_type = bpy.context.area.ui_type
                 bpy.context.area.ui_type = 'UV'
-
-                bpy.ops.uv.project_from_view(camera_bounds=False, correct_aspect=True, scale_to_bounds=True)
+                
                 bpy.context.scene.tool_settings.use_uv_select_sync = True
                 bpy.ops.transform.resize(value=(0, .3, .3), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(True, False, False), mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=0.385543, use_proportional_connected=False, use_proportional_projected=False)
                 
