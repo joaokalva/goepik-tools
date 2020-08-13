@@ -123,6 +123,42 @@ class OBJECT_OT_pallette_uvs(bpy.types.Operator):
         ShowMessageBox("UV's para Pallette.", "Sucesso!", "INFO") 
         return {'FINISHED'}
 
+
+class OBJECT_OT_automate_blocking(bpy.types.Operator):
+    """Automatiza o processo de Blocking. Selecione os objetos, e o resultado é a mesh pronta para a UE4."""
+    bl_idname = "mesh.automate_blocking"
+    bl_label = "Automate Blocking"
+
+    def execute(self, context):
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                if context.active_object.mode == 'EDIT':
+                        ShowMessageBox("Faça uma seleção no modo de objeto", "Aviso", "ERROR")
+                        return {'FINISHED'}
+    
+        bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":False, "mode":'TRANSLATION'}, TRANSFORM_OT_translate={"value":(0, 0, 0), "orient_type":'GLOBAL', "orient_matrix":((1, 0, 0), (0, 1, 0), (0, 0, 1)), "orient_matrix_type":'GLOBAL', "constraint_axis":(False, False, False), "mirror":True, "use_proportional_edit":False, "proportional_edit_falloff":'SMOOTH', "proportional_size":0.385543, "use_proportional_connected":False, "use_proportional_projected":False, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "cursor_transform":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False})
+        bpy.ops.object.move_to_collection(collection_index=2)
+        bpy.ops.object.hide_collection(collection_index=2)
+    
+        main_obj = bpy.context.scene.objects[1]
+        bpy.context.view_layer.objects.active = main_obj
+        bpy.context.active_object.select_set(state=True)
+        
+        bpy.ops.object.convert(target='MESH', keep_original=False)
+        bpy.ops.object.join()
+
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.mesh.remove_doubles()
+        bpy.ops.mesh.quads_convert_to_tris(quad_method='BEAUTY', ngon_method='BEAUTY')
+
+        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.context.object.data.use_auto_smooth = True
+        bpy.context.object.data.auto_smooth_angle = 1.25664
+
+        ShowMessageBox("Blocking Setup.", "Sucesso!", "INFO") 
+        return {'FINISHED'}
+
 # Panel UI
 
 class MyPanel(bpy.types.Panel):
@@ -136,7 +172,7 @@ class MyPanel(bpy.types.Panel):
         scene = context.scene
         
         if debugging:
-            self.layout.label(text="DEBUG", icon="ERROR")
+            self.layout.label(text="DEVELOPMENT", icon="ERROR")
         
         row = layout.row(align=True)
         row.operator("mesh.clean_mesh")
@@ -146,6 +182,9 @@ class MyPanel(bpy.types.Panel):
         
         row = layout.row(align=True)
         row.operator("mesh.pallette_uvs")
+        
+        row = layout.row(align=True)
+        row.operator("mesh.automate_blocking")
 
 # Registration
 
@@ -156,11 +195,11 @@ def add_object_button(self, context):
         icon='PLUGIN')
 
 def register():
-
     bpy.utils.register_class(MyPanel)
     bpy.utils.register_class(OBJECT_OT_clean_mesh)
     bpy.utils.register_class(OBJECT_OT_uvs_by_angle)   
     bpy.utils.register_class(OBJECT_OT_pallette_uvs)   
+    bpy.utils.register_class(OBJECT_OT_automate_blocking)  
     bpy.types.VIEW3D_MT_mesh_add.append(add_object_button)
     
 def unregister():
@@ -168,6 +207,7 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_clean_mesh)
     bpy.utils.unregister_class(OBJECT_OT_uvs_by_angle)
     bpy.utils.unregister_class(OBJECT_OT_pallette_uvs)
+    bpy.utils.unregister_class(OBJECT_OT_automate_blocking)
     bpy.types.VIEW3D_MT_mesh_add.remove(add_object_button)
 
 if __name__ == "__main__":
