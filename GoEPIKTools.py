@@ -116,8 +116,9 @@ class OBJECT_OT_pallette_uvs(bpy.types.Operator):
                 
                 bpy.context.scene.tool_settings.use_uv_select_sync = True
                 bpy.ops.transform.resize(value=(0, .3, .3), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(True, False, False), mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=0.385543, use_proportional_connected=False, use_proportional_projected=False)
+                bpy.context.scene.tool_settings.use_uv_select_sync = False
                 
-                bpy.context.area.ui_type = old_ui_type
+                bpy.context.area.ui_type = old_ui_type            
                 bpy.context.area.type = 'VIEW_3D'
 
         ShowMessageBox("UV's para Pallette.", "Sucesso!", "INFO") 
