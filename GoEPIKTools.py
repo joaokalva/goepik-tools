@@ -131,34 +131,45 @@ class OBJECT_OT_automate_blocking(bpy.types.Operator):
     bl_label = "Automate Blocking"
 
     def execute(self, context):
-        for area in bpy.context.screen.areas:
-            if area.type == 'VIEW_3D':
-                if context.active_object.mode == 'EDIT':
-                    ShowMessageBox("Faça uma seleção no modo de objeto", "Aviso", "ERROR")
-                    return {'FINISHED'}
-    
-        bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":False, "mode":'TRANSLATION'}, TRANSFORM_OT_translate={"value":(0, 0, 0), "orient_type":'GLOBAL', "orient_matrix":((1, 0, 0), (0, 1, 0), (0, 0, 1)), "orient_matrix_type":'GLOBAL', "constraint_axis":(False, False, False), "mirror":True, "use_proportional_edit":False, "proportional_edit_falloff":'SMOOTH', "proportional_size":0.385543, "use_proportional_connected":False, "use_proportional_projected":False, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "cursor_transform":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False})
-        bpy.ops.object.move_to_collection(collection_index=2)
-        bpy.ops.object.hide_collection(collection_index=2)
-    
-        main_obj = bpy.context.scene.objects[1]
-        bpy.context.view_layer.objects.active = main_obj
-        bpy.context.active_object.select_set(state=True)
+        try: 
+            for area in bpy.context.screen.areas:
+                if area.type == 'VIEW_3D':
+                    if context.active_object.mode == 'EDIT':
+                        ShowMessageBox("Faça uma seleção no modo de objeto", "Aviso", "ERROR")
+                        return {'FINISHED'}
+            
+            bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":False, "mode":'TRANSLATION'}, TRANSFORM_OT_translate={"value":(0, 0, 0), "orient_type":'GLOBAL', "orient_matrix":((1, 0, 0), (0, 1, 0), (0, 0, 1)), "orient_matrix_type":'GLOBAL', "constraint_axis":(False, False, False), "mirror":True, "use_proportional_edit":False, "proportional_edit_falloff":'SMOOTH', "proportional_size":0.385543, "use_proportional_connected":False, "use_proportional_projected":False, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "cursor_transform":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False, "use_accurate":False})
+            bpy.ops.object.move_to_collection(collection_index=2)
+            bpy.ops.object.hide_collection(collection_index=2)
         
-        bpy.ops.object.convert(target='MESH', keep_original=False)
-        bpy.ops.object.join()
+            main_obj = bpy.context.scene.objects[1]
+            bpy.context.view_layer.objects.active = main_obj
+            bpy.context.active_object.select_set(state=True)
+            
+            bpy.ops.object.convert(target='MESH', keep_original=False)
+            bpy.ops.object.join()
 
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.mesh.select_all(action='SELECT')
-        bpy.ops.mesh.remove_doubles()
-        bpy.ops.mesh.quads_convert_to_tris(quad_method='BEAUTY', ngon_method='BEAUTY')
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.mesh.select_all(action='SELECT')
+            bpy.ops.mesh.remove_doubles()
+            bpy.ops.mesh.quads_convert_to_tris(quad_method='BEAUTY', ngon_method='BEAUTY')
 
-        bpy.ops.object.mode_set(mode='OBJECT')
-        bpy.context.object.data.use_auto_smooth = True
-        bpy.context.object.data.auto_smooth_angle = 1.25664
+            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.context.object.data.use_auto_smooth = True
+            bpy.context.object.data.auto_smooth_angle = 1.25664
 
-        ShowMessageBox("Blocking Setup.", "Sucesso!", "INFO") 
-        return {'FINISHED'}
+            bpy.ops.object.modifier_add(type='WEIGHTED_NORMAL')
+            bpy.context.object.modifiers["Weighted Normal"].keep_sharp = True
+            bpy.context.object.modifiers["Weighted Normal"].weight = 100
+            bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Weighted Normal")
+            bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+
+            ShowMessageBox("Blocking Setup.", "Sucesso!", "INFO") 
+            return {'FINISHED'}
+
+        except:
+            ShowMessageBox("Selecione um objeto ativo", "Aviso", "ERROR")
+            return {'FINISHED'}
 
 # Panel UI
 
