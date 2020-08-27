@@ -1,10 +1,10 @@
 bl_info = {
-    "name": "GoEPIK Tools",
+    "name": "Kalva Tools",
     "author": "João Kalva",
     "version": (1, 0),
     "blender": (2, 80, 0),
-    "location": "View3D > Sidebar > Misc > GoEPIK Tools",
-    "description": "Bundle de ferramentas GoEPIK",
+    "location": "View3D > Sidebar (N) > Kalva Tools",
+    "description": "Bundle de ferramentas Kalva",
     "warning": "",
     "wiki_url": "",
     "category": "Mesh",
@@ -176,7 +176,8 @@ class OBJECT_OT_automate_blocking(bpy.types.Operator):
 class MyPanel(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_label = "GoEPIK Tools"
+    bl_category = "Kalva Tools"
+    bl_label = "Kalva Tools"
     bl_idname = "OBJECT_OT_clean_mesh"
 
     def draw(self, context):
