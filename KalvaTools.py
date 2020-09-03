@@ -173,7 +173,7 @@ class OBJECT_OT_automate_blocking(bpy.types.Operator):
             bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
 
             fbxpath = "D:\\João\\Documents\\3D\\CGMA Modularity\\Definitive Environment\\Everything.fbx"
-            bpy.ops.export_scene.fbx(filepath=fbxpath, check_existing=True, axis_forward='-Y', axis_up='Z', filter_glob="*.fbx", use_selection=True, global_scale=100.0, apply_unit_scale=True, bake_space_transform=False, object_types={'MESH'}, use_mesh_modifiers=True, mesh_smooth_type='OFF', use_mesh_edges=False, use_tspace=True, use_custom_props=False, add_leaf_bones=True, primary_bone_axis='Y', secondary_bone_axis='X', use_armature_deform_only=False, bake_anim=True, bake_anim_use_all_bones=True, bake_anim_use_nla_strips=True, bake_anim_use_all_actions=True, bake_anim_force_startend_keying=True, bake_anim_step=1.0, bake_anim_simplify_factor=1.0)
+            bpy.ops.export_scene.fbx(filepath=fbxpath, check_existing=True, axis_forward='-Y', axis_up='Z', filter_glob="*.fbx", use_selection=True, global_scale=1, apply_unit_scale=True, bake_space_transform=False, object_types={'MESH'}, use_mesh_modifiers=True, mesh_smooth_type='OFF', use_mesh_edges=False, use_tspace=True, use_custom_props=False, add_leaf_bones=True, primary_bone_axis='Y', secondary_bone_axis='X', use_armature_deform_only=False, bake_anim=True, bake_anim_use_all_bones=True, bake_anim_use_nla_strips=True, bake_anim_use_all_actions=True, bake_anim_force_startend_keying=True, bake_anim_step=1.0, bake_anim_simplify_factor=1.0)
 
             ShowMessageBox("Exportado como " + os.path.basename(os.path.normpath(fbxpath)), "Sucesso!", "INFO") 
             return {'FINISHED'}
