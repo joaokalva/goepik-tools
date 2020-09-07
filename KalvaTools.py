@@ -125,11 +125,10 @@ class OBJECT_OT_pallette_uvs(bpy.types.Operator):
         ShowMessageBox("UV's para Pallette.", "Sucesso!", "INFO") 
         return {'FINISHED'}
 
-
 class OBJECT_OT_automate_blocking(bpy.types.Operator):
     """Automatiza o processo de Blocking. Selecione os objetos, e o resultado é a mesh pronta para a UE4."""
     bl_idname = "mesh.automate_blocking"
-    bl_label = "Automate Blocking"
+    bl_label = "UE4 Automate Blocking"
 
     def execute(self, context):
         try: 
@@ -182,8 +181,51 @@ class OBJECT_OT_automate_blocking(bpy.types.Operator):
             ShowMessageBox("Selecione um objeto ativo", "Aviso", "ERROR")
             return {'FINISHED'}
 
-# Panel UI
+class OBJECT_OT_hyperbolica_export(bpy.types.Operator):
+    """Automatiza o processo de Blocking. Selecione os objetos, e o resultado é a mesh pronta para a UE4."""
+    bl_idname = "mesh.hyperbolica_export"
+    bl_label = "Hyperbolica Export"
 
+    def execute(self, context):
+        currentpath = bpy.path.abspath("//")
+        filename = os.path.basename(os.path.normpath(bpy.data.filepath)).replace('.blend', '')
+        exportpath = currentpath + filename + '.fbx'
+
+        for area in bpy.context.screen.areas:
+            if area.type == 'OUTLINER':
+                vlayer = bpy.context.scene.view_layers['View Layer']
+                for layer_collection in vlayer.layer_collection.children:
+                    layer_collection.hide_viewport = True
+                    vlayer.layer_collection.children['Export'].hide_viewport = False
+
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                for region in area.regions:
+                    if region.type == 'WINDOW':
+                        override = {'area': area, 'region': region, 'edit_object': bpy.context.edit_object}
+                        main_obj = bpy.data.collections["Export"].objects[0]
+                        bpy.context.view_layer.objects.active = main_obj
+                        bpy.context.active_object.select_set(state=True)
+
+                        bpy.ops.object.select_all(action='SELECT')
+                        bpy.ops.object.join()
+                        # bpy.ops.view3d.view_all(override, center=True)
+                        bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
+                        bpy.context.object.name = filename
+
+                        if len(main_obj.data.materials) > 1:
+                            times = len(main_obj.data.materials) - 1
+                            for n in range(times):
+                                bpy.ops.object.material_slot_remove()
+
+                            bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+
+        bpy.ops.export_scene.fbx(filepath=exportpath, axis_forward='-Z', axis_up='Y', use_selection=True, global_scale=1, bake_space_transform=True, apply_scale_options='FBX_SCALE_NONE', apply_unit_scale=True, object_types={'MESH'}, use_mesh_modifiers=True, mesh_smooth_type='FACE', use_mesh_edges=False, use_tspace=True, use_custom_props=False, add_leaf_bones=True, primary_bone_axis='Y', secondary_bone_axis='X', use_armature_deform_only=False, bake_anim=True, bake_anim_use_all_bones=True, bake_anim_use_nla_strips=True, bake_anim_use_all_actions=True, bake_anim_force_startend_keying=True, bake_anim_step=1.0, bake_anim_simplify_factor=1.0)
+
+        ShowMessageBox("Exportado como " + exportpath + filename + '.fbx', "Sucesso!", "INFO") 
+        return {'FINISHED'}
+
+# Panel UI
 class MyPanel(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -210,8 +252,10 @@ class MyPanel(bpy.types.Panel):
         row = layout.row(align=True)
         row.operator("mesh.automate_blocking")
 
-# Registration
+        row = layout.row(align=True)
+        row.operator("mesh.hyperbolica_export")
 
+# Registration
 def add_object_button(self, context):
     self.layout.operator(
         OBJECT_OT_add_object.bl_idname,
@@ -224,6 +268,7 @@ def register():
     bpy.utils.register_class(OBJECT_OT_uvs_by_angle)   
     bpy.utils.register_class(OBJECT_OT_pallette_uvs)   
     bpy.utils.register_class(OBJECT_OT_automate_blocking)  
+    bpy.utils.register_class(OBJECT_OT_hyperbolica_export)  
     bpy.types.VIEW3D_MT_mesh_add.append(add_object_button)
     
 def unregister():
@@ -232,6 +277,7 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_uvs_by_angle)
     bpy.utils.unregister_class(OBJECT_OT_pallette_uvs)
     bpy.utils.unregister_class(OBJECT_OT_automate_blocking)
+    bpy.utils.unregister_class(OBJECT_OT_hyperbolica_export)  
     bpy.types.VIEW3D_MT_mesh_add.remove(add_object_button)
 
 if __name__ == "__main__":
