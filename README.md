@@ -1,5 +1,6 @@
 # Kalva Tools
-Scripts para o Blender 2.8+ que facilitam a vida e o workflow, como: <br> <br>
-✔ Automatização de processos repetitivos <br>
-✔ UV's automáticos na UV01  <br>
-✔ UV's para pallettes automático <br>
+Script for Blender 2.8+ that eases life and workflows, including: <br> <br>
+✔ Object cleanup  <br>
+✔ UV's by angle in UV01  <br>
+✔ UV's for gradient pallettes <br>
+✔ Automatic exports for UE4 <br>
