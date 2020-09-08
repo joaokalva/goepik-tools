@@ -21,7 +21,11 @@ def ShowMessageBox(custom_message = "", custom_title = "", custom_icon = ""):
         self.layout.label(text=custom_message)
     
     bpy.context.window_manager.popup_menu(draw, title = custom_title, icon = custom_icon)
-        
+
+def copy2clip(txt):
+    cmd='echo '+txt.strip()+'|clip'
+    return subprocess.check_call(cmd, shell=True)
+
 
 class OBJECT_OT_clean_mesh(bpy.types.Operator):
     """Remove vértices duplas, aplica escala e rotação, limpa Custom Split Data, aplica Auto Smooth e recalcula normais."""
@@ -209,7 +213,7 @@ class OBJECT_OT_hyperbolica_export(bpy.types.Operator):
 
                         bpy.ops.object.select_all(action='SELECT')
                         bpy.ops.object.join()
-                        # bpy.ops.view3d.view_all(override, center=True)
+                        bpy.ops.view3d.view_all(override, center=True)
                         bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
                         bpy.context.object.name = filename
 
@@ -222,6 +226,7 @@ class OBJECT_OT_hyperbolica_export(bpy.types.Operator):
 
         bpy.ops.export_scene.fbx(filepath=exportpath, axis_forward='-Z', axis_up='Y', use_selection=True, global_scale=1, bake_space_transform=True, apply_scale_options='FBX_SCALE_NONE', apply_unit_scale=True, object_types={'MESH'}, use_mesh_modifiers=True, mesh_smooth_type='FACE', use_mesh_edges=False, use_tspace=True, use_custom_props=False, add_leaf_bones=True, primary_bone_axis='Y', secondary_bone_axis='X', use_armature_deform_only=False, bake_anim=True, bake_anim_use_all_bones=True, bake_anim_use_nla_strips=True, bake_anim_use_all_actions=True, bake_anim_force_startend_keying=True, bake_anim_step=1.0, bake_anim_simplify_factor=1.0)
 
+        copy2clip(filename)
         ShowMessageBox("Exportado como " + exportpath + filename + '.fbx', "Sucesso!", "INFO") 
         return {'FINISHED'}
 
