@@ -13,6 +13,7 @@ bl_info = {
 import bpy
 import math
 import os 
+import subprocess
 
 debugging = False
 
