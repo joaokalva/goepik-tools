@@ -29,17 +29,23 @@ def copy2clip(txt):
 
 
 class OBJECT_OT_clean_mesh(bpy.types.Operator):
-    """Remove overlapping vertices, apply scale and rotation, remove Custom Split Data, apply Auto Smooth and recalculate normals"""
+    """Remove overlapping vertices, apply scale and rotation, remove Custom Split Data, apply Auto Smooth and recalculate normals. Set instances to active object to apply scale"""
     bl_idname = "mesh.clean_mesh"
     bl_label = "Clean Mesh(s)"
     
     def execute(self, context):   
             
         selection_names = [obj.name for obj in bpy.context.selected_objects]
-        
+                
         if len(selection_names) == 0:
             ShowMessageBox("Select an object", "Warning", "ERROR") ,
             return {'FINISHED'}
+
+        # Apply Scale to Instances
+        bpy.ops.object.select_linked(type='OBDATA')
+        bpy.ops.object.make_single_user(object=True, obdata=True, material=False, animation=False)
+        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+        bpy.ops.object.make_links_data(type='OBDATA')
 
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.select_all(action='SELECT')
@@ -47,13 +53,12 @@ class OBJECT_OT_clean_mesh(bpy.types.Operator):
         bpy.ops.mesh.normals_make_consistent(inside=False)
         bpy.ops.mesh.select_all(action='DESELECT')
         bpy.ops.object.mode_set(mode='OBJECT')
-        bpy.ops.object.transform_apply(location=False, rotation=True, scale=True, properties=True)
+
         bpy.ops.mesh.customdata_custom_splitnormals_clear()
         bpy.ops.object.shade_smooth()
 
         for listObject in selection_names:
             bpy.context.object.data.use_auto_smooth = True
-            bpy.context.object.data.auto_smooth_angle = math.pi/2.5
             bpy.ops.mesh.customdata_custom_splitnormals_clear()
 
         ShowMessageBox(" ; ".join(selection_names), "Mesh(s) successfully cleaned", "INFO") 
