@@ -27,6 +27,13 @@ def copy2clip(txt):
     cmd='echo '+txt.strip()+'|clip'
     return subprocess.check_call(cmd, shell=True)
 
+def switchCollection(Collection):
+        for area in bpy.context.screen.areas:
+            if area.type == 'OUTLINER':
+                vlayer = bpy.context.scene.view_layers['View Layer']
+                for layer_collection in vlayer.layer_collection.children:
+                    layer_collection.hide_viewport = True
+                vlayer.layer_collection.children[Collection].hide_viewport = False
 
 class OBJECT_OT_clean_mesh(bpy.types.Operator):
     """Remove overlapping vertices, apply scale and rotation, remove Custom Split Data, apply Auto Smooth and recalculate normals. Set instances to active object to apply scale"""
@@ -191,44 +198,84 @@ class OBJECT_OT_automate_blocking(bpy.types.Operator):
             ShowMessageBox("Select and active object", "Warning", "ERROR")
             return {'FINISHED'}
 
+class OBJECT_OT_select_uv0(bpy.types.Operator):
+    """If none, creates and selects UV1 for multiple objects"""
+    bl_idname = "mesh.select_uv0"
+    bl_label = "Select UV0"
+
+    def execute(self, context):
+        for obj in bpy.context.selected_objects:
+            while len(obj.data.uv_layers) < 1:
+                obj.data.uv_layers.new()
+            obj.data.uv_layers[0].name = "UVMap"
+            obj.data.uv_layers.active_index = 0
+
+        return {'FINISHED'}
+
+class OBJECT_OT_select_uv1(bpy.types.Operator):
+    """If none, creates and selects UV1 for multiple objects"""
+    bl_idname = "mesh.select_uv1"
+    bl_label = "Select UV1"
+
+    def execute(self, context):
+        for obj in bpy.context.selected_objects:
+            while len(obj.data.uv_layers) < 2:
+                obj.data.uv_layers.new()
+            obj.data.uv_layers[1].name = "UVMap.001"
+            obj.data.uv_layers.active_index = 1
+
+        return {'FINISHED'}
+
 class OBJECT_OT_hyperbolica_export(bpy.types.Operator):
     """Automate export and error correction for Hyperbolica (takes .blend file name)"""
     bl_idname = "mesh.hyperbolica_export"
     bl_label = "Hyperbolica Export"
 
     def execute(self, context):
+        switchCollection("Export")
+        bpy.ops.object.select_all(action='SELECT')
+        bpy.ops.object.delete()
+
+        switchCollection("Backup")
+
         currentpath = bpy.path.abspath("//")
         filename = os.path.basename(os.path.normpath(bpy.data.filepath)).replace('.blend', '')
         exportpath = currentpath + filename + '.fbx'
-
-        for area in bpy.context.screen.areas:
-            if area.type == 'OUTLINER':
-                vlayer = bpy.context.scene.view_layers['View Layer']
-                for layer_collection in vlayer.layer_collection.children:
-                    layer_collection.hide_viewport = True
-                    vlayer.layer_collection.children['Export'].hide_viewport = False
 
         for area in bpy.context.screen.areas:
             if area.type == 'VIEW_3D':
                 for region in area.regions:
                     if region.type == 'WINDOW':
                         override = {'area': area, 'region': region, 'edit_object': bpy.context.edit_object}
-                        main_obj = bpy.data.collections["Export"].objects[0]
+                        main_obj = bpy.data.collections["Backup"].objects[0]
                         bpy.context.view_layer.objects.active = main_obj
                         bpy.context.active_object.select_set(state=True)
 
                         bpy.ops.object.select_all(action='SELECT')
+                        bpy.ops.object.duplicate()
+                        bpy.ops.object.move_to_collection(collection_index=2)
+                        switchCollection("Export")
+
+                        bpy.ops.object.convert(target='MESH', keep_original=False)
+
                         bpy.ops.object.join()
                         bpy.ops.view3d.view_all(override, center=True)
                         bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
-                        bpy.context.object.name = filename
+
+                        bpy.ops.object.mode_set(mode='EDIT')
+                        bpy.ops.mesh.select_all(action='SELECT')
+                        bpy.ops.mesh.remove_doubles()
+                        bpy.ops.object.mode_set(mode='OBJECT')
+
+                        bpy.ops.mesh.customdata_custom_splitnormals_clear()
+                        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
                         if len(main_obj.data.materials) > 1:
                             times = len(main_obj.data.materials) - 1
                             for n in range(times):
                                 bpy.ops.object.material_slot_remove()
 
-                            bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+                        bpy.context.object.name = filename
 
         bpy.ops.export_scene.fbx(filepath=exportpath, axis_forward='-Z', axis_up='Y', use_selection=True, global_scale=1, bake_space_transform=True, apply_scale_options='FBX_SCALE_NONE', apply_unit_scale=True, object_types={'MESH'}, use_mesh_modifiers=True, mesh_smooth_type='FACE', use_mesh_edges=False, use_tspace=True, use_custom_props=False, add_leaf_bones=True, primary_bone_axis='Y', secondary_bone_axis='X', use_armature_deform_only=False, bake_anim=True, bake_anim_use_all_bones=True, bake_anim_use_nla_strips=True, bake_anim_use_all_actions=True, bake_anim_force_startend_keying=True, bake_anim_step=1.0, bake_anim_simplify_factor=1.0)
 
@@ -263,8 +310,14 @@ class MyPanel(bpy.types.Panel):
         row = layout.row(align=True)
         row.operator("mesh.automate_blocking")
 
-        row = layout.row(align=True)
-        row.operator("mesh.hyperbolica_export")
+        self.layout.label(text="Hyperbolica")
+
+        col = layout.column(align=True)
+        row = col.row(align=True)
+        row.operator('mesh.select_uv0', icon="UV_DATA")
+        row.operator('mesh.select_uv1', icon="UV_DATA")
+        row2 = col.row(align=True)
+        row2.operator('mesh.hyperbolica_export', icon="EXPORT")
 
 # Registration
 def add_object_button(self, context):
@@ -279,6 +332,8 @@ def register():
     bpy.utils.register_class(OBJECT_OT_uvs_by_angle)   
     bpy.utils.register_class(OBJECT_OT_pallette_uvs)   
     bpy.utils.register_class(OBJECT_OT_automate_blocking)  
+    bpy.utils.register_class(OBJECT_OT_select_uv0)  
+    bpy.utils.register_class(OBJECT_OT_select_uv1)  
     bpy.utils.register_class(OBJECT_OT_hyperbolica_export)  
     bpy.types.VIEW3D_MT_mesh_add.append(add_object_button)
     
@@ -288,6 +343,8 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_uvs_by_angle)
     bpy.utils.unregister_class(OBJECT_OT_pallette_uvs)
     bpy.utils.unregister_class(OBJECT_OT_automate_blocking)
+    bpy.utils.unregister_class(OBJECT_OT_select_uv0)  
+    bpy.utils.unregister_class(OBJECT_OT_select_uv1)  
     bpy.utils.unregister_class(OBJECT_OT_hyperbolica_export)  
     bpy.types.VIEW3D_MT_mesh_add.remove(add_object_button)
 
