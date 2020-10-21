@@ -63,6 +63,7 @@ class OBJECT_OT_clean_mesh(bpy.types.Operator):
 
         bpy.ops.mesh.customdata_custom_splitnormals_clear()
         bpy.ops.object.shade_smooth()
+        bpy.context.object.data.auto_smooth_angle = 1.29154
 
         for listObject in selection_names:
             bpy.context.object.data.use_auto_smooth = True
@@ -246,6 +247,8 @@ class OBJECT_OT_hyperbolica_export(bpy.types.Operator):
             if area.type == 'VIEW_3D':
                 for region in area.regions:
                     if region.type == 'WINDOW':
+                        bpy.ops.object.hide_view_clear()
+
                         override = {'area': area, 'region': region, 'edit_object': bpy.context.edit_object}
                         main_obj = bpy.data.collections["Backup"].objects[0]
                         bpy.context.view_layer.objects.active = main_obj
@@ -277,7 +280,7 @@ class OBJECT_OT_hyperbolica_export(bpy.types.Operator):
 
                         bpy.context.object.name = filename
 
-        bpy.ops.export_scene.fbx(filepath=exportpath, axis_forward='-Z', axis_up='Y', use_selection=True, global_scale=1, bake_space_transform=True, apply_scale_options='FBX_SCALE_NONE', apply_unit_scale=True, object_types={'MESH'}, use_mesh_modifiers=True, mesh_smooth_type='FACE', use_mesh_edges=False, use_tspace=True, use_custom_props=False, add_leaf_bones=True, primary_bone_axis='Y', secondary_bone_axis='X', use_armature_deform_only=False, bake_anim=True, bake_anim_use_all_bones=True, bake_anim_use_nla_strips=True, bake_anim_use_all_actions=True, bake_anim_force_startend_keying=True, bake_anim_step=1.0, bake_anim_simplify_factor=1.0)
+        bpy.ops.export_scene.fbx(filepath=exportpath, axis_forward='-Z', axis_up='Y', use_selection=True, global_scale=1, bake_space_transform=True, apply_scale_options='FBX_SCALE_NONE', apply_unit_scale=True, object_types={'MESH', 'LIGHT'}, use_mesh_modifiers=True, mesh_smooth_type='FACE', use_mesh_edges=False, use_tspace=True, use_custom_props=False, add_leaf_bones=True, primary_bone_axis='Y', secondary_bone_axis='X', use_armature_deform_only=False, bake_anim=True, bake_anim_use_all_bones=True, bake_anim_use_nla_strips=True, bake_anim_use_all_actions=True, bake_anim_force_startend_keying=True, bake_anim_step=1.0, bake_anim_simplify_factor=1.0)
 
         copy2clip(filename)
         ShowMessageBox("Exported as " + exportpath, "Success!", "INFO") 
