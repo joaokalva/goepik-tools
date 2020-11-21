@@ -326,6 +326,99 @@ class OBJECT_OT_hyperbolica_export(bpy.types.Operator):
         ShowMessageBox("Exported as " + exportpath, "Success!", "INFO") 
         return {'FINISHED'}
 
+class OBJECT_OT_increase_uv_res(bpy.types.Operator):
+    """Increase UV resolution by increasing scale without affecting mesh"""
+    bl_idname = "mesh.increase_uv_res"
+    bl_label = "Increase UV Resolution"
+
+    def execute(self, context):
+        selected_objs = bpy.context.selected_objects
+        active_obj = bpy.context.view_layer.objects.active
+
+        for i in selected_objs:
+            children = bpy.ops.object.select_hierarchy(direction='CHILD')
+            selected_children = bpy.context.selected_objects
+            
+            # If active obj is patent:
+            if not i.name in str(selected_children):
+                for child in selected_children:
+                    print("Child: " + str(child))
+                    active_obj = children
+                    IncreaseUVRes(child, isChild = True)
+                    bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+                IncreaseUVRes(i, isChild = False)
+                
+                for child in selected_children:
+                    child.parent = i
+                    child.matrix_parent_inverse = i.matrix_world.inverted()
+
+        # ShowMessageBox("Increased UV resolution by 1.5x", "Success!", "INFO") 
+        return {'FINISHED'}
+
+class OBJECT_OT_square_uvs(bpy.types.Operator):
+    """Square UVs for selected meshes"""
+    bl_idname = "mesh.square_uvs"
+    bl_label = "Square UVs"
+
+    def execute(self, context):
+        # global SquareUVList
+        selected_objs = bpy.context.selected_objects
+
+        SelectUVChannel(1)
+        # for obj in selected_objs:
+        #     if obj not in SquareUVList:
+        #         SquareUVList = SquareUVList + selected_objs
+                
+        for i in selected_objs:
+            if bpy.ops.object.mode_set.poll():
+                bpy.ops.object.mode_set(mode='EDIT')
+                
+            for area in bpy.context.screen.areas:
+                if area.type == "IMAGE_EDITOR":
+                    bpy.ops.uv.select_all(action='SELECT')
+                    bpy.context.scene.tool_settings.use_uv_select_sync = False
+                    bpy.ops.uv.uv_squares_by_shape()
+                    bpy.ops.uv.pin()
+
+        # bpy.ops.object.mode_set(mode='OBJECT')
+
+        ShowMessageBox("Square UVs", "Success!", "INFO") 
+        return {'FINISHED'}
+
+class OBJECT_OT_uv_cleanup(bpy.types.Operator):
+    """Applies all scale and removes UV pins"""
+    bl_idname = "mesh.uv_cleanup"
+    bl_label = "Clean UVs"
+
+    def execute(self, context):
+        for area in bpy.context.screen.areas:
+            try:
+                SelectUVChannel(1)
+                if area.type == "VIEW_3D":
+                    bpy.ops.object.select_all(action='SELECT')
+                    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+            except:
+                ShowMessageBox("Open a 3D View window.", "Warning!", "ERROR") 
+                return {'FINISHED'}
+
+            try:
+                if area.type == "IMAGE_EDITOR":
+                    # Select all mesh
+                    bpy.ops.object.mode_set(mode='EDIT')
+                    bpy.ops.mesh.select_all(action='SELECT')
+
+                    # Unpin & apply scale
+                    bpy.ops.uv.select_all(action='SELECT')
+                    bpy.ops.uv.pin(clear=True)
+                    bpy.ops.uv.average_islands_scale()
+                    bpy.ops.uv.pack_islands(margin=0.001)
+            except:
+                ShowMessageBox("Open a UV Editor window.", "Warning!", "ERROR") 
+                return {'FINISHED'}
+
+        ShowMessageBox("UV Cleanup", "Success!", "INFO") 
+        return {'FINISHED'}
+
 # Panel UI
 class MyPanel(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
@@ -378,6 +471,7 @@ def register():
     bpy.utils.register_class(OBJECT_OT_select_uv0)  
     bpy.utils.register_class(OBJECT_OT_select_uv1)  
     bpy.utils.register_class(OBJECT_OT_hyperbolica_export)  
+    bpy.utils.register_class(OBJECT_OT_increase_uv_res)  
     bpy.types.VIEW3D_MT_mesh_add.append(add_object_button)
     
 def unregister():
@@ -389,6 +483,7 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_select_uv0)  
     bpy.utils.unregister_class(OBJECT_OT_select_uv1)  
     bpy.utils.unregister_class(OBJECT_OT_hyperbolica_export)  
+    bpy.utils.unregister_class(OBJECT_OT_increase_uv_res)  
     bpy.types.VIEW3D_MT_mesh_add.remove(add_object_button)
 
 if __name__ == "__main__":
