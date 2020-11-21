@@ -240,6 +240,19 @@ class OBJECT_OT_hyperbolica_export(bpy.types.Operator):
     bl_label = "Hyperbolica Export"
 
     def execute(self, context):
+        # Disable VIEW_3D fullscreen 
+        areas = 0
+        for area in bpy.context.screen.areas:
+            areas += 1 
+
+        print("Areas: " + str(areas))
+
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                if areas == 1:
+                    bpy.ops.screen.screen_full_area({'area': area})
+                    break
+
         switchCollection("Export")
         bpy.ops.object.select_all(action='SELECT')
         bpy.ops.object.delete()
@@ -254,21 +267,30 @@ class OBJECT_OT_hyperbolica_export(bpy.types.Operator):
             if area.type == 'VIEW_3D':
                 for region in area.regions:
                     if region.type == 'WINDOW':
-                        bpy.ops.object.hide_view_clear()
+                        switchCollection("Backup")
+                        try:
+                            bpy.ops.object.hide_view_clear()
+                        except:
+                            ShowMessageBox("Export in windowed mode", "Warning", "ERROR")
+                            return {'FINISHED'}
 
-                        override = {'area': area, 'region': region, 'edit_object': bpy.context.edit_object}
                         main_obj = bpy.data.collections["Backup"].objects[0]
+
                         bpy.context.view_layer.objects.active = main_obj
                         bpy.context.active_object.select_set(state=True)
 
                         bpy.ops.object.select_all(action='SELECT')
                         bpy.ops.object.duplicate()
                         bpy.ops.object.move_to_collection(collection_index=2)
+
                         switchCollection("Export")
 
+                        bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+                        bpy.ops.object.make_single_user(object=True, obdata=True, material=False, animation=False)
                         bpy.ops.object.convert(target='MESH', keep_original=False)
 
                         bpy.ops.object.join()
+                        override = {'area': area, 'region': region, 'edit_object': bpy.context.edit_object}
                         bpy.ops.view3d.view_all(override, center=True)
                         bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
 
@@ -278,6 +300,7 @@ class OBJECT_OT_hyperbolica_export(bpy.types.Operator):
                         bpy.ops.object.mode_set(mode='OBJECT')
 
                         bpy.ops.mesh.customdata_custom_splitnormals_clear()
+                        bpy.context.object.data.auto_smooth_angle = 1.6057
                         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
                         if len(main_obj.data.materials) > 1:
@@ -286,7 +309,17 @@ class OBJECT_OT_hyperbolica_export(bpy.types.Operator):
                                 bpy.ops.object.material_slot_remove()
 
                         bpy.context.object.name = filename
+        
+        SelectUVChannel(0)
 
+        bpy.ops.object.modifier_add(type='WEIGHTED_NORMAL')
+        bpy.context.object.modifiers["WeightedNormal"].keep_sharp = True
+        bpy.context.object.modifiers["WeightedNormal"].weight = 100
+        bpy.ops.object.modifier_add(type='TRIANGULATE')
+        bpy.ops.object.modifier_add(type='WELD')
+        bpy.context.object.modifiers["Weld"].merge_threshold = 1e-05
+
+        # Use_mesh_modifiers on -> cannot export shape keys
         bpy.ops.export_scene.fbx(filepath=exportpath, axis_forward='-Z', axis_up='Y', use_selection=True, global_scale=1, bake_space_transform=True, apply_scale_options='FBX_SCALE_NONE', apply_unit_scale=True, object_types={'MESH', 'LIGHT'}, use_mesh_modifiers=True, mesh_smooth_type='FACE', use_mesh_edges=False, use_tspace=True, use_custom_props=False, add_leaf_bones=True, primary_bone_axis='Y', secondary_bone_axis='X', use_armature_deform_only=False, bake_anim=True, bake_anim_use_all_bones=True, bake_anim_use_nla_strips=True, bake_anim_use_all_actions=True, bake_anim_force_startend_keying=True, bake_anim_step=1.0, bake_anim_simplify_factor=1.0)
 
         copy2clip(filename)
