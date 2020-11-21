@@ -35,6 +35,15 @@ def switchCollection(Collection):
                     layer_collection.hide_viewport = True
                 vlayer.layer_collection.children[Collection].hide_viewport = False
 
+def SelectUVChannel(i = 0):
+    for obj in bpy.context.selected_objects:
+        while len(obj.data.uv_layers) < i+1:
+            obj.data.uv_layers.new()
+        if i == 0:
+            obj.data.uv_layers[i].name = "UVMap"
+        else:
+            obj.data.uv_layers[i].name = "UVMap.00" + str(i)
+        obj.data.uv_layers.active_index = i
 class OBJECT_OT_clean_mesh(bpy.types.Operator):
     """Remove overlapping vertices, apply scale and rotation, remove Custom Split Data, apply Auto Smooth and recalculate normals. Set instances to active object to apply scale"""
     bl_idname = "mesh.clean_mesh"
@@ -205,12 +214,11 @@ class OBJECT_OT_select_uv0(bpy.types.Operator):
     bl_label = "Select UV0"
 
     def execute(self, context):
-        for obj in bpy.context.selected_objects:
-            while len(obj.data.uv_layers) < 1:
-                obj.data.uv_layers.new()
-            obj.data.uv_layers[0].name = "UVMap"
-            obj.data.uv_layers.active_index = 0
-
+        SelectUVChannel(0)
+        # for area in bpy.context.screen.areas:
+        #     if area.type == "VIEW_3D":
+        #         bpy.ops.object.select_all(action='SELECT')
+        #         bpy.ops.object.select_all(action='DESELECT')
         return {'FINISHED'}
 
 class OBJECT_OT_select_uv1(bpy.types.Operator):
@@ -219,12 +227,11 @@ class OBJECT_OT_select_uv1(bpy.types.Operator):
     bl_label = "Select UV1"
 
     def execute(self, context):
-        for obj in bpy.context.selected_objects:
-            while len(obj.data.uv_layers) < 2:
-                obj.data.uv_layers.new()
-            obj.data.uv_layers[1].name = "UVMap.001"
-            obj.data.uv_layers.active_index = 1
-
+        SelectUVChannel(1)
+        # for area in bpy.context.screen.areas:
+        #     if area.type == "VIEW_3D":
+        #         bpy.ops.object.select_all(action='SELECT')
+        #         bpy.ops.object.select_all(action='DESELECT')
         return {'FINISHED'}
 
 class OBJECT_OT_hyperbolica_export(bpy.types.Operator):
